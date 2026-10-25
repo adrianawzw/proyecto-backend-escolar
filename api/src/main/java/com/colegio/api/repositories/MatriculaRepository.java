@@ -1,0 +1,39 @@
+package com.colegio.api.repositories;
+
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import com.colegio.api.models.Matricula;
+
+import jakarta.persistence.LockModeType;
+
+public interface MatriculaRepository extends JpaRepository<Matricula, UUID> {
+
+    // Listar matrículas por estudiante
+    List<Matricula> findByEstudianteId(UUID estudianteId);
+
+    // Verificar matrícula vigente
+    Optional<Matricula> findByEstudianteIdAndAnioLectivo(UUID estudianteId, Integer anioLectivo);
+
+    // Obtener alumnos de un grado específico en un año lectivo
+    List<Matricula> findByAnioLectivoAndNivelAndGrado(Integer anioLectivo, String nivel, String grado);
+
+    // Obtener matrículas pagadas en un rango de fechas
+    List<Matricula> findByMatriculaPagadaTrueAndFechaPagoMatriculaBetween(OffsetDateTime fechaInicio,
+            OffsetDateTime fechaFin);
+
+    // Verificar si ya existe matrícula para el estudiante en el año lectivo
+    boolean existsByEstudianteIdAndAnioLectivo(UUID estudianteId, Integer anioLectivo);
+
+    // Buscar matrícula por id con bloqueo pesimista
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT m FROM Matricula m WHERE m.id = :id")
+    Optional<Matricula> buscarPorIdParaActualizar(@Param("id") UUID id);
+}

@@ -11,6 +11,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.colegio.api.recuperacion.RecuperacionException;
+
 import jakarta.persistence.EntityNotFoundException;
 
 @RestControllerAdvice
@@ -93,6 +95,25 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(429)
                 .header("Retry-After", "60")
                 .body(body);
+    }
+
+    @ExceptionHandler(RecuperacionException.class)
+    public ResponseEntity<Object> handleRecuperacion(RecuperacionException ex) {
+        HttpStatus status = HttpStatus.resolve(ex.getStatus());
+        String error = status != null ? status.getReasonPhrase() : "Error";
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", OffsetDateTime.now().toString());
+        body.put("status", ex.getStatus());
+        body.put("error", error);
+        body.put("message", ex.getMessage());
+
+        ResponseEntity.BodyBuilder builder = ResponseEntity.status(ex.getStatus());
+        if (ex.getRetryAfterSegundos() > 0) {
+            builder.header("Retry-After", String.valueOf(ex.getRetryAfterSegundos()));
+        }
+
+        return builder.body(body);
     }
 
 }

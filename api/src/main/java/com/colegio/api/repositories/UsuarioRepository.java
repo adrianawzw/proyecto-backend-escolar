@@ -20,6 +20,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
     // Validar que existe email
     boolean existsByEmail(String email);
 
+    Optional<Usuario> findByEmailIgnoreCase(String email);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT u FROM Usuario u WHERE u.id = :id")
     Optional<Usuario> buscarPorIdParaActualizar(@Param("id") UUID id);
